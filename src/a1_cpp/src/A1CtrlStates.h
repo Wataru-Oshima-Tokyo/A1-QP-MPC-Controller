@@ -6,8 +6,7 @@
 #define A1_CPP_A1CTRLSTATES_H
 
 #include <Eigen/Dense>
-#include <ros/ros.h>
-
+#include <rclcpp/rclcpp.hpp>
 #include "A1Params.h"
 
 class A1CtrlStates {
@@ -132,12 +131,12 @@ public:
         power_level = 5;
     }
 
-    void resetFromROSParam(ros::NodeHandle &_nh) {
-        _nh.param("stance_leg_control_type", stance_leg_control_type, 1);
-        _nh.param("use_terrain_adapt", use_terrain_adapt, 1);
+    void resetFromROSParam(std::shared_ptr<rclcpp::Node> node)  {
+        node->get_parameter_or("stance_leg_control_type", stance_leg_control_type, 1);
+        node->get_parameter_or("use_terrain_adapt", use_terrain_adapt, 1);
         
 
-        _nh.param("a1_robot_mass", robot_mass, 13.0);
+        node->get_parameter_or("a1_robot_mass", robot_mass, 13.0);
 
         double a1_trunk_inertia_xx;
         double a1_trunk_inertia_xy;
@@ -146,12 +145,12 @@ public:
         double a1_trunk_inertia_yy;
         double a1_trunk_inertia_zz;
 
-        _nh.param("a1_trunk_inertia_xx", a1_trunk_inertia_xx, 0.0158533);
-        _nh.param("a1_trunk_inertia_xy", a1_trunk_inertia_xy, 0.0);
-        _nh.param("a1_trunk_inertia_xz", a1_trunk_inertia_xz, 0.0);
-        _nh.param("a1_trunk_inertia_yz", a1_trunk_inertia_yz, 0.0);
-        _nh.param("a1_trunk_inertia_yy", a1_trunk_inertia_yy, 0.0377999);
-        _nh.param("a1_trunk_inertia_zz", a1_trunk_inertia_zz, 0.0456542);
+        node->get_parameter_or("a1_trunk_inertia_xx", a1_trunk_inertia_xx, 0.0158533);
+        node->get_parameter_or("a1_trunk_inertia_xy", a1_trunk_inertia_xy, 0.0);
+        node->get_parameter_or("a1_trunk_inertia_xz", a1_trunk_inertia_xz, 0.0);
+        node->get_parameter_or("a1_trunk_inertia_yz", a1_trunk_inertia_yz, 0.0);
+        node->get_parameter_or("a1_trunk_inertia_yy", a1_trunk_inertia_yy, 0.0377999);
+        node->get_parameter_or("a1_trunk_inertia_zz", a1_trunk_inertia_zz, 0.0456542);
 
         a1_trunk_inertia << a1_trunk_inertia_xx, a1_trunk_inertia_xy, a1_trunk_inertia_xz,
                 a1_trunk_inertia_xy, a1_trunk_inertia_yy, a1_trunk_inertia_yz,
@@ -173,21 +172,21 @@ public:
         double a1_default_foot_pos_RR_y;
         double a1_default_foot_pos_RR_z;
 
-        _nh.param("a1_default_foot_pos_FL_x", a1_default_foot_pos_FL_x, 0.25);
-        _nh.param("a1_default_foot_pos_FL_y", a1_default_foot_pos_FL_y, 0.15);
-        _nh.param("a1_default_foot_pos_FL_z", a1_default_foot_pos_FL_z, -0.33);
+        node->get_parameter_or("a1_default_foot_pos_FL_x", a1_default_foot_pos_FL_x, 0.25);
+        node->get_parameter_or("a1_default_foot_pos_FL_y", a1_default_foot_pos_FL_y, 0.15);
+        node->get_parameter_or("a1_default_foot_pos_FL_z", a1_default_foot_pos_FL_z, -0.33);
 
-        _nh.param("a1_default_foot_pos_FR_x", a1_default_foot_pos_FR_x, 0.25);
-        _nh.param("a1_default_foot_pos_FR_y", a1_default_foot_pos_FR_y, -0.15);
-        _nh.param("a1_default_foot_pos_FR_z", a1_default_foot_pos_FR_z, -0.33);
+        node->get_parameter_or("a1_default_foot_pos_FR_x", a1_default_foot_pos_FR_x, 0.25);
+        node->get_parameter_or("a1_default_foot_pos_FR_y", a1_default_foot_pos_FR_y, -0.15);
+        node->get_parameter_or("a1_default_foot_pos_FR_z", a1_default_foot_pos_FR_z, -0.33);
 
-        _nh.param("a1_default_foot_pos_RL_x", a1_default_foot_pos_RL_x, -0.17);
-        _nh.param("a1_default_foot_pos_RL_y", a1_default_foot_pos_RL_y, 0.15);
-        _nh.param("a1_default_foot_pos_RL_z", a1_default_foot_pos_RL_z, -0.33);
+        node->get_parameter_or("a1_default_foot_pos_RL_x", a1_default_foot_pos_RL_x, -0.17);
+        node->get_parameter_or("a1_default_foot_pos_RL_y", a1_default_foot_pos_RL_y, 0.15);
+        node->get_parameter_or("a1_default_foot_pos_RL_z", a1_default_foot_pos_RL_z, -0.33);
 
-        _nh.param("a1_default_foot_pos_RR_x", a1_default_foot_pos_RR_x, -0.17);
-        _nh.param("a1_default_foot_pos_RR_y", a1_default_foot_pos_RR_y, -0.15);
-        _nh.param("a1_default_foot_pos_RR_z", a1_default_foot_pos_RR_z, -0.33);
+        node->get_parameter_or("a1_default_foot_pos_RR_x", a1_default_foot_pos_RR_x, -0.17);
+        node->get_parameter_or("a1_default_foot_pos_RR_y", a1_default_foot_pos_RR_y, -0.15);
+        node->get_parameter_or("a1_default_foot_pos_RR_z", a1_default_foot_pos_RR_z, -0.33);
 
         default_foot_pos << a1_default_foot_pos_FL_x, a1_default_foot_pos_FR_x, a1_default_foot_pos_RL_x, a1_default_foot_pos_RR_x,
                 a1_default_foot_pos_FL_y, a1_default_foot_pos_FR_y, a1_default_foot_pos_RL_y, a1_default_foot_pos_RR_y,
@@ -195,23 +194,23 @@ public:
 
         double q_weights_0, q_weights_1, q_weights_2, q_weights_3, q_weights_4, q_weights_5, q_weights_6, q_weights_7, q_weights_8, q_weights_9, q_weights_10, q_weights_11, q_weights_12;
 
-        _nh.param("q_weights_0", q_weights_0, 80.0);
-        _nh.param("q_weights_1", q_weights_1, 80.0);
-        _nh.param("q_weights_2", q_weights_2, 1.0);
+        node->get_parameter_or("q_weights_0", q_weights_0, 80.0);
+        node->get_parameter_or("q_weights_1", q_weights_1, 80.0);
+        node->get_parameter_or("q_weights_2", q_weights_2, 1.0);
 
-        _nh.param("q_weights_3", q_weights_3, 0.0);
-        _nh.param("q_weights_4", q_weights_4, 0.0);
-        _nh.param("q_weights_5", q_weights_5, 270.0);
+        node->get_parameter_or("q_weights_3", q_weights_3, 0.0);
+        node->get_parameter_or("q_weights_4", q_weights_4, 0.0);
+        node->get_parameter_or("q_weights_5", q_weights_5, 270.0);
 
-        _nh.param("q_weights_6", q_weights_6, 1.0);
-        _nh.param("q_weights_7", q_weights_7, 1.0);
-        _nh.param("q_weights_8", q_weights_8, 20.0);
+        node->get_parameter_or("q_weights_6", q_weights_6, 1.0);
+        node->get_parameter_or("q_weights_7", q_weights_7, 1.0);
+        node->get_parameter_or("q_weights_8", q_weights_8, 20.0);
 
-        _nh.param("q_weights_9", q_weights_9, 20.0);
-        _nh.param("q_weights_10", q_weights_10, 20.0);
-        _nh.param("q_weights_11", q_weights_11, 20.0);
+        node->get_parameter_or("q_weights_9", q_weights_9, 20.0);
+        node->get_parameter_or("q_weights_10", q_weights_10, 20.0);
+        node->get_parameter_or("q_weights_11", q_weights_11, 20.0);
 
-        _nh.param("q_weights_12", q_weights_12, 0.0);
+        node->get_parameter_or("q_weights_12", q_weights_12, 0.0);
 
         q_weights << q_weights_0, q_weights_1, q_weights_2,
                 q_weights_3, q_weights_4, q_weights_5,
@@ -221,21 +220,21 @@ public:
 
         double r_weights_0, r_weights_1, r_weights_2, r_weights_3, r_weights_4, r_weights_5, r_weights_6, r_weights_7, r_weights_8, r_weights_9, r_weights_10, r_weights_11;
 
-        _nh.param("r_weights_0", r_weights_0, 1e-5);
-        _nh.param("r_weights_1", r_weights_1, 1e-5);
-        _nh.param("r_weights_2", r_weights_2, 1e-6);
+        node->get_parameter_or("r_weights_0", r_weights_0, 1e-5);
+        node->get_parameter_or("r_weights_1", r_weights_1, 1e-5);
+        node->get_parameter_or("r_weights_2", r_weights_2, 1e-6);
 
-        _nh.param("r_weights_3", r_weights_3, 1e-5);
-        _nh.param("r_weights_4", r_weights_4, 1e-5);
-        _nh.param("r_weights_5", r_weights_5, 1e-6);
+        node->get_parameter_or("r_weights_3", r_weights_3, 1e-5);
+        node->get_parameter_or("r_weights_4", r_weights_4, 1e-5);
+        node->get_parameter_or("r_weights_5", r_weights_5, 1e-6);
 
-        _nh.param("r_weights_6", r_weights_6, 1e-5);
-        _nh.param("r_weights_7", r_weights_7, 1e-5);
-        _nh.param("r_weights_8", r_weights_8, 1e-6);
+        node->get_parameter_or("r_weights_6", r_weights_6, 1e-5);
+        node->get_parameter_or("r_weights_7", r_weights_7, 1e-5);
+        node->get_parameter_or("r_weights_8", r_weights_8, 1e-6);
 
-        _nh.param("r_weights_9", r_weights_9, 1e-5);
-        _nh.param("r_weights_10", r_weights_10, 1e-5);
-        _nh.param("r_weights_11", r_weights_11, 1e-6);
+        node->get_parameter_or("r_weights_9", r_weights_9, 1e-5);
+        node->get_parameter_or("r_weights_10", r_weights_10, 1e-5);
+        node->get_parameter_or("r_weights_11", r_weights_11, 1e-6);
 
         r_weights << r_weights_0, r_weights_1, r_weights_2,
                 r_weights_3, r_weights_4, r_weights_5,
@@ -244,17 +243,17 @@ public:
 
         double a1_kp_foot_x, a1_kp_foot_y, a1_kp_foot_z, a1_kd_foot_x, a1_kd_foot_y, a1_kd_foot_z, a1_km_foot_x, a1_km_foot_y, a1_km_foot_z;
 
-        _nh.param("a1_kp_foot_x", a1_kp_foot_x, 150.0);
-        _nh.param("a1_kp_foot_y", a1_kp_foot_y, 150.0);
-        _nh.param("a1_kp_foot_z", a1_kp_foot_z, 200.0);
+        node->get_parameter_or("a1_kp_foot_x", a1_kp_foot_x, 150.0);
+        node->get_parameter_or("a1_kp_foot_y", a1_kp_foot_y, 150.0);
+        node->get_parameter_or("a1_kp_foot_z", a1_kp_foot_z, 200.0);
 
-        _nh.param("a1_kd_foot_x", a1_kd_foot_x, 0.0);
-        _nh.param("a1_kd_foot_y", a1_kd_foot_y, 0.0);
-        _nh.param("a1_kd_foot_z", a1_kd_foot_z, 0.0);
+        node->get_parameter_or("a1_kd_foot_x", a1_kd_foot_x, 0.0);
+        node->get_parameter_or("a1_kd_foot_y", a1_kd_foot_y, 0.0);
+        node->get_parameter_or("a1_kd_foot_z", a1_kd_foot_z, 0.0);
 
-        _nh.param("a1_km_foot_x", a1_km_foot_x, 0.1);
-        _nh.param("a1_km_foot_y", a1_km_foot_y, 0.1);
-        _nh.param("a1_km_foot_z", a1_km_foot_z, 0.04);
+        node->get_parameter_or("a1_km_foot_x", a1_km_foot_x, 0.1);
+        node->get_parameter_or("a1_km_foot_y", a1_km_foot_y, 0.1);
+        node->get_parameter_or("a1_km_foot_z", a1_km_foot_z, 0.04);
 
         kp_foot <<
                 a1_kp_foot_x, a1_kp_foot_x, a1_kp_foot_x, a1_kp_foot_x,
@@ -270,30 +269,30 @@ public:
         double a1_kp_linear_x;
         double a1_kp_linear_y;
         double a1_kp_linear_z;
-        _nh.param("a1_kp_linear_x", a1_kp_linear_x, 120.0);
-        _nh.param("a1_kp_linear_y", a1_kp_linear_y, 120.0);
-        _nh.param("a1_kp_linear_z", a1_kp_linear_z, 500.0);
+        node->get_parameter_or("a1_kp_linear_x", a1_kp_linear_x, 120.0);
+        node->get_parameter_or("a1_kp_linear_y", a1_kp_linear_y, 120.0);
+        node->get_parameter_or("a1_kp_linear_z", a1_kp_linear_z, 500.0);
 
         double a1_kd_linear_x;
         double a1_kd_linear_y;
         double a1_kd_linear_z;
-        _nh.param("a1_kd_linear_x", a1_kd_linear_x, 70.0);
-        _nh.param("a1_kd_linear_y", a1_kd_linear_y, 70.0);
-        _nh.param("a1_kd_linear_z", a1_kd_linear_z, 120.0);
+        node->get_parameter_or("a1_kd_linear_x", a1_kd_linear_x, 70.0);
+        node->get_parameter_or("a1_kd_linear_y", a1_kd_linear_y, 70.0);
+        node->get_parameter_or("a1_kd_linear_z", a1_kd_linear_z, 120.0);
 
         double a1_kp_angular_x;
         double a1_kp_angular_y;
         double a1_kp_angular_z;
-        _nh.param("a1_kp_angular_x", a1_kp_angular_x, 250.0);
-        _nh.param("a1_kp_angular_y", a1_kp_angular_y, 35.0);
-        _nh.param("a1_kp_angular_z", a1_kp_angular_z, 1.0);
+        node->get_parameter_or("a1_kp_angular_x", a1_kp_angular_x, 250.0);
+        node->get_parameter_or("a1_kp_angular_y", a1_kp_angular_y, 35.0);
+        node->get_parameter_or("a1_kp_angular_z", a1_kp_angular_z, 1.0);
 
         double a1_kd_angular_x;
         double a1_kd_angular_y;
         double a1_kd_angular_z;
-        _nh.param("a1_kd_angular_x", a1_kd_angular_x, 1.5);
-        _nh.param("a1_kd_angular_y", a1_kd_angular_y, 1.5);
-        _nh.param("a1_kd_angular_z", a1_kd_angular_z, 30.0);
+        node->get_parameter_or("a1_kd_angular_x", a1_kd_angular_x, 1.5);
+        node->get_parameter_or("a1_kd_angular_y", a1_kd_angular_y, 1.5);
+        node->get_parameter_or("a1_kd_angular_z", a1_kd_angular_z, 30.0);
 
         kp_linear_lock_x = a1_kp_linear_x;
         kp_linear_lock_y = a1_kp_linear_y;
@@ -308,15 +307,15 @@ public:
         double a1_gait_counter_speed_RL;
         double a1_gait_counter_speed_RR;
 
-        _nh.param("a1_gait_counter_speed_FL", a1_gait_counter_speed_FL, 2.0);
-        _nh.param("a1_gait_counter_speed_FR", a1_gait_counter_speed_FR, 2.0);
-        _nh.param("a1_gait_counter_speed_RL", a1_gait_counter_speed_RL, 2.0);
-        _nh.param("a1_gait_counter_speed_RR", a1_gait_counter_speed_RR, 2.0);
+        node->get_parameter_or("a1_gait_counter_speed_FL", a1_gait_counter_speed_FL, 2.0);
+        node->get_parameter_or("a1_gait_counter_speed_FR", a1_gait_counter_speed_FR, 2.0);
+        node->get_parameter_or("a1_gait_counter_speed_RL", a1_gait_counter_speed_RL, 2.0);
+        node->get_parameter_or("a1_gait_counter_speed_RR", a1_gait_counter_speed_RR, 2.0);
 
         gait_counter_speed
                 << a1_gait_counter_speed_FL, a1_gait_counter_speed_FR, a1_gait_counter_speed_RL, a1_gait_counter_speed_RR;
 
-        _nh.param("a1_hardware_power_level", power_level, 2);
+        node->get_parameter_or("a1_hardware_power_level", power_level, 2);
     }
 
     void gait_counter_reset() {

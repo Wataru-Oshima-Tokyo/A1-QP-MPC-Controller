@@ -5,57 +5,52 @@
 #include "GazeboA1ROS.h"
 
 // constructor
-GazeboA1ROS::GazeboA1ROS(ros::NodeHandle &_nh) {
-    nh = _nh;
+GazeboA1ROS::GazeboA1ROS(std::shared_ptr<rclcpp::Node> node) : node_(node) {
 
     // ROS publisher
-    pub_joint_cmd[0] = nh.advertise<unitree_legged_msgs::MotorCmd>("/a1_gazebo/FL_hip_controller/command", 1);
-    pub_joint_cmd[1] = nh.advertise<unitree_legged_msgs::MotorCmd>("/a1_gazebo/FL_thigh_controller/command", 1);
-    pub_joint_cmd[2] = nh.advertise<unitree_legged_msgs::MotorCmd>("/a1_gazebo/FL_calf_controller/command", 1);
+    pub_joint_cmd[0] = node_->create_publisher<ros2_unitree_legged_msgs::msg::::MotorCmd>("/FL_hip_joint/command", 1);
+    pub_joint_cmd[1] = node_->create_publisher<ros2_unitree_legged_msgs::msg::::MotorCmd>("/FL_thigh_joint/command", 1);
+    pub_joint_cmd[2] = node_->create_publisher<ros2_unitree_legged_msgs::msg::::MotorCmd>("/FL_calf_joint/command", 1);
 
-    pub_joint_cmd[3] = nh.advertise<unitree_legged_msgs::MotorCmd>("/a1_gazebo/FR_hip_controller/command", 1);
-    pub_joint_cmd[4] = nh.advertise<unitree_legged_msgs::MotorCmd>("/a1_gazebo/FR_thigh_controller/command", 1);
-    pub_joint_cmd[5] = nh.advertise<unitree_legged_msgs::MotorCmd>("/a1_gazebo/FR_calf_controller/command", 1);
+    pub_joint_cmd[3] = node_->create_publisher<ros2_unitree_legged_msgs::msg::::MotorCmd>("/FR_hip_joint/command", 1);
+    pub_joint_cmd[4] = node_->create_publisher<ros2_unitree_legged_msgs::msg::::MotorCmd>("/FR_thigh_joint/command", 1);
+    pub_joint_cmd[5] = node_->create_publisher<ros2_unitree_legged_msgs::msg::::MotorCmd>("/FR_calf_joint/command", 1);
 
-    pub_joint_cmd[6] = nh.advertise<unitree_legged_msgs::MotorCmd>("/a1_gazebo/RL_hip_controller/command", 1);
-    pub_joint_cmd[7] = nh.advertise<unitree_legged_msgs::MotorCmd>("/a1_gazebo/RL_thigh_controller/command", 1);
-    pub_joint_cmd[8] = nh.advertise<unitree_legged_msgs::MotorCmd>("/a1_gazebo/RL_calf_controller/command", 1);
+    pub_joint_cmd[6] = node_->create_publisher<ros2_unitree_legged_msgs::msg::::MotorCmd>("/RL_hip_joint/command", 1);
+    pub_joint_cmd[7] = node_->create_publisher<ros2_unitree_legged_msgs::msg::::MotorCmd>("/RL_thigh_joint/command", 1);
+    pub_joint_cmd[8] = node_->create_publisher<ros2_unitree_legged_msgs::msg::::MotorCmd>("/RL_calf_joint/command", 1);
 
-    pub_joint_cmd[9] = nh.advertise<unitree_legged_msgs::MotorCmd>("/a1_gazebo/RR_hip_controller/command", 1);
-    pub_joint_cmd[10] = nh.advertise<unitree_legged_msgs::MotorCmd>("/a1_gazebo/RR_thigh_controller/command", 1);
-    pub_joint_cmd[11] = nh.advertise<unitree_legged_msgs::MotorCmd>("/a1_gazebo/RR_calf_controller/command", 1);
+    pub_joint_cmd[9] = node_->create_publisher<ros2_unitree_legged_msgs::msg::::MotorCmd>("/RR_hip_joint/command", 1);
+    pub_joint_cmd[10] = node_->create_publisher<ros2_unitree_legged_msgs::msg::::MotorCmd>("/RR_thigh_joint/command", 1);
+    pub_joint_cmd[11] = node_->create_publisher<ros2_unitree_legged_msgs::msg::::MotorCmd>("/RR_calf_joint/command", 1);
 
     // debug estimation
-    pub_estimated_pose = nh.advertise<nav_msgs::Odometry>("/gazebo_a1/estimation_body_pose", 100);
+    pub_estimated_pose = node_->create_publisher<nav_msgs::msg::Odometry>("/gazebo_a1/estimation_body_pose", 10);
 
-    pub_euler_d = nh.advertise<geometry_msgs::PointStamped>("a1_debug/euler_d", 100);
+    pub_euler_d = node_->create_publisher<geometry_msgs::msg::PointStamped>("a1_debug/euler_d", 10);
 
     // ROS register callback, call backs directly modify variables in A1CtrlStates
-    sub_gt_pose_msg = nh.subscribe("/torso_odom", 100, &GazeboA1ROS::gt_pose_callback, this);
-    sub_imu_msg = nh.subscribe("/trunk_imu", 100, &GazeboA1ROS::imu_callback, this);
+    sub_gt_pose_msg = node_->create_subscription<nav_msgs::msg::Odometry>("/torso_odom", 10, std::bind(&GazeboA1ROS::gt_pose_callback, this, std::placeholders::_1));
+    sub_imu_msg = node_->create_subscription<sensor_msgs::msg::Imu>("/trunk_imu", 10, std::bind(&GazeboA1ROS::imu_callback, this, std::placeholders::_1));
+    sub_joint_msg[0] = node_->create_subscription<ros2_unitree_legged_msgs::msg::MotorState>("/FL_hip_joint/state", 10, std::bind(&IOROS2::FL_hip_state_callback, this, std::placeholders::_1));
+    sub_joint_msg[0] = node_->create_subscription<ros2_unitree_legged_msgs::msg::MotorState>("/FL_thigh_joint/state", 10, std::bind(&IOROS2::FL_thigh_state_callback, this, std::placeholders::_1));
+    sub_joint_msg[0] = node_->create_subscription<ros2_unitree_legged_msgs::msg::MotorState>("/FL_calf_joint/state", 10, std::bind(&IOROS2::FL_calf_state_callback, this, std::placeholders::_1));
+    sub_joint_msg[0] = node_->create_subscription<ros2_unitree_legged_msgs::msg::MotorState>("/FR_hip_joint/state", 10, std::bind(&IOROS2::FR_hip_state_callback, this, std::placeholders::_1));
+    sub_joint_msg[0] = node_->create_subscription<ros2_unitree_legged_msgs::msg::MotorState>("/FR_thigh_joint/state", 10, std::bind(&IOROS2::FR_thigh_state_callback, this, std::placeholders::_1));
+    sub_joint_msg[0] = node_->create_subscription<ros2_unitree_legged_msgs::msg::MotorState>("/RL_hip_joint/state", 10, std::bind(&IOROS2::RL_hip_state_callback, this, std::placeholders::_1));
+    sub_joint_msg[0] = node_->create_subscription<ros2_unitree_legged_msgs::msg::MotorState>("/RL_thigh_joint/state", 10, std::bind(&IOROS2::RL_thigh_state_callback, this, std::placeholders::_1));
+    sub_joint_msg[0] = node_->create_subscription<ros2_unitree_legged_msgs::msg::MotorState>("/RL_calf_joint/state", 10, std::bind(&IOROS2::RL_calf_state_callback, this, std::placeholders::_1));
+    sub_joint_msg[0] = node_->create_subscription<ros2_unitree_legged_msgs::msg::MotorState>("/RR_hip_joint/state", 10, std::bind(&IOROS2::RR_hip_state_callback, this, std::placeholders::_1));
+    sub_joint_msg[0] = node_->create_subscription<ros2_unitree_legged_msgs::msg::MotorState>("/RR_thigh_joint/state", 10, std::bind(&IOROS2::RR_thigh_state_callback, this, std::placeholders::_1));
+    sub_joint_msg[0] = node_->create_subscription<ros2_unitree_legged_msgs::msg::MotorState>("/RR_thigh_joint/state", 10, std::bind(&IOROS2::RR_calf_state_callback, this, std::placeholders::_1));
+    
 
-    sub_joint_msg[0] = nh.subscribe("/a1_gazebo/FL_hip_controller/state", 2, &GazeboA1ROS::FL_hip_state_callback, this);
-    sub_joint_msg[1] = nh.subscribe("/a1_gazebo/FL_thigh_controller/state", 2, &GazeboA1ROS::FL_thigh_state_callback, this);
-    sub_joint_msg[2] = nh.subscribe("/a1_gazebo/FL_calf_controller/state", 2, &GazeboA1ROS::FL_calf_state_callback, this);
+    // sub_foot_contact_msg[0] = nh.subscribe("/visual/FL_foot_contact/the_force", 2, &GazeboA1ROS::FL_foot_contact_callback, this);
+    // sub_foot_contact_msg[1] = nh.subscribe("/visual/FR_foot_contact/the_force", 2, &GazeboA1ROS::FR_foot_contact_callback, this);
+    // sub_foot_contact_msg[2] = nh.subscribe("/visual/RL_foot_contact/the_force", 2, &GazeboA1ROS::RL_foot_contact_callback, this);
+    // sub_foot_contact_msg[3] = nh.subscribe("/visual/RR_foot_contact/the_force", 2, &GazeboA1ROS::RR_foot_contact_callback, this);
 
-    sub_joint_msg[3] = nh.subscribe("/a1_gazebo/FR_hip_controller/state", 2, &GazeboA1ROS::FR_hip_state_callback, this);
-    sub_joint_msg[4] = nh.subscribe("/a1_gazebo/FR_thigh_controller/state", 2, &GazeboA1ROS::FR_thigh_state_callback, this);
-    sub_joint_msg[5] = nh.subscribe("/a1_gazebo/FR_calf_controller/state", 2, &GazeboA1ROS::FR_calf_state_callback, this);
-
-    sub_joint_msg[6] = nh.subscribe("/a1_gazebo/RL_hip_controller/state", 2, &GazeboA1ROS::RL_hip_state_callback, this);
-    sub_joint_msg[7] = nh.subscribe("/a1_gazebo/RL_thigh_controller/state", 2, &GazeboA1ROS::RL_thigh_state_callback, this);
-    sub_joint_msg[8] = nh.subscribe("/a1_gazebo/RL_calf_controller/state", 2, &GazeboA1ROS::RL_calf_state_callback, this);
-
-    sub_joint_msg[9] = nh.subscribe("/a1_gazebo/RR_hip_controller/state", 2, &GazeboA1ROS::RR_hip_state_callback, this);
-    sub_joint_msg[10] = nh.subscribe("/a1_gazebo/RR_thigh_controller/state", 2, &GazeboA1ROS::RR_thigh_state_callback, this);
-    sub_joint_msg[11] = nh.subscribe("/a1_gazebo/RR_calf_controller/state", 2, &GazeboA1ROS::RR_calf_state_callback, this);
-
-    sub_foot_contact_msg[0] = nh.subscribe("/visual/FL_foot_contact/the_force", 2, &GazeboA1ROS::FL_foot_contact_callback, this);
-    sub_foot_contact_msg[1] = nh.subscribe("/visual/FR_foot_contact/the_force", 2, &GazeboA1ROS::FR_foot_contact_callback, this);
-    sub_foot_contact_msg[2] = nh.subscribe("/visual/RL_foot_contact/the_force", 2, &GazeboA1ROS::RL_foot_contact_callback, this);
-    sub_foot_contact_msg[3] = nh.subscribe("/visual/RR_foot_contact/the_force", 2, &GazeboA1ROS::RR_foot_contact_callback, this);
-
-    sub_joy_msg = nh.subscribe("/joy", 1000, &GazeboA1ROS::joy_callback, this);
+    sub_joy_msg = node_->create_subscription<sensor_msgs::msg::Joy>("/joy", 10, std::bind(&GazeboA1ROS::joy_callback, this, std::placeholders::_1));
 
     joy_cmd_ctrl_state = 0;
     joy_cmd_ctrl_state_change_request = false;
@@ -232,7 +227,7 @@ bool GazeboA1ROS::send_cmd() {
 }
 
 // callback functions
-void GazeboA1ROS::gt_pose_callback(const nav_msgs::Odometry::ConstPtr &odom) {
+void GazeboA1ROS::gt_pose_callback(const nav_msgs::msg::Odometry::SharedPtr odom) {
     // update
     a1_ctrl_states.root_quat = Eigen::Quaterniond(odom->pose.pose.orientation.w,
                                                   odom->pose.pose.orientation.x,
@@ -281,7 +276,7 @@ void GazeboA1ROS::gt_pose_callback(const nav_msgs::Odometry::ConstPtr &odom) {
     }
 }
 
-void GazeboA1ROS::imu_callback(const sensor_msgs::Imu::ConstPtr &imu) {
+void GazeboA1ROS::imu_callback(const sensor_msgs::msg::Imu::SharedPtr imu) {
     // a1_ctrl_states.root_quat = Eigen::Quaterniond(quat_w.CalculateAverage(imu->orientation.w),
     //                                               quat_x.CalculateAverage(imu->orientation.x),
     //                                               quat_y.CalculateAverage(imu->orientation.y),
@@ -300,88 +295,88 @@ void GazeboA1ROS::imu_callback(const sensor_msgs::Imu::ConstPtr &imu) {
 }
 
 // FL
-void GazeboA1ROS::FL_hip_state_callback(const unitree_legged_msgs::MotorState &a1_joint_state) {
+void GazeboA1ROS::FL_hip_state_callback(const ros2_unitree_legged_msgs::msg::MotorState &a1_joint_state) {
     a1_ctrl_states.joint_pos[0] = a1_joint_state.q;
     a1_ctrl_states.joint_vel[0] = a1_joint_state.dq;
 }
 
-void GazeboA1ROS::FL_thigh_state_callback(const unitree_legged_msgs::MotorState &a1_joint_state) {
+void GazeboA1ROS::FL_thigh_state_callback(const ros2_unitree_legged_msgs::msg::MotorState &a1_joint_state) {
     a1_ctrl_states.joint_pos[1] = a1_joint_state.q;
     a1_ctrl_states.joint_vel[1] = a1_joint_state.dq;
 }
 
-void GazeboA1ROS::FL_calf_state_callback(const unitree_legged_msgs::MotorState &a1_joint_state) {
+void GazeboA1ROS::FL_calf_state_callback(const ros2_unitree_legged_msgs::msg::MotorState &a1_joint_state) {
     a1_ctrl_states.joint_pos[2] = a1_joint_state.q;
     a1_ctrl_states.joint_vel[2] = a1_joint_state.dq;
 }
 
 // FR
-void GazeboA1ROS::FR_hip_state_callback(const unitree_legged_msgs::MotorState &a1_joint_state) {
+void GazeboA1ROS::FR_hip_state_callback(const ros2_unitree_legged_msgs::msg::MotorState &a1_joint_state) {
     a1_ctrl_states.joint_pos[3] = a1_joint_state.q;
     a1_ctrl_states.joint_vel[3] = a1_joint_state.dq;
 }
 
-void GazeboA1ROS::FR_thigh_state_callback(const unitree_legged_msgs::MotorState &a1_joint_state) {
+void GazeboA1ROS::FR_thigh_state_callback(const ros2_unitree_legged_msgs::msg::MotorState &a1_joint_state) {
     a1_ctrl_states.joint_pos[4] = a1_joint_state.q;
     a1_ctrl_states.joint_vel[4] = a1_joint_state.dq;
 }
 
-void GazeboA1ROS::FR_calf_state_callback(const unitree_legged_msgs::MotorState &a1_joint_state) {
+void GazeboA1ROS::FR_calf_state_callback(const ros2_unitree_legged_msgs::msg::MotorState &a1_joint_state) {
     a1_ctrl_states.joint_pos[5] = a1_joint_state.q;
     a1_ctrl_states.joint_vel[5] = a1_joint_state.dq;
 }
 
 // RL
-void GazeboA1ROS::RL_hip_state_callback(const unitree_legged_msgs::MotorState &a1_joint_state) {
+void GazeboA1ROS::RL_hip_state_callback(const ros2_unitree_legged_msgs::msg::MotorState &a1_joint_state) {
     a1_ctrl_states.joint_pos[6] = a1_joint_state.q;
     a1_ctrl_states.joint_vel[6] = a1_joint_state.dq;
 }
 
-void GazeboA1ROS::RL_thigh_state_callback(const unitree_legged_msgs::MotorState &a1_joint_state) {
+void GazeboA1ROS::RL_thigh_state_callback(const ros2_unitree_legged_msgs::msg::MotorState &a1_joint_state) {
     a1_ctrl_states.joint_pos[7] = a1_joint_state.q;
     a1_ctrl_states.joint_vel[7] = a1_joint_state.dq;
 }
 
-void GazeboA1ROS::RL_calf_state_callback(const unitree_legged_msgs::MotorState &a1_joint_state) {
+void GazeboA1ROS::RL_calf_state_callback(const ros2_unitree_legged_msgs::msg::MotorState &a1_joint_state) {
     a1_ctrl_states.joint_pos[8] = a1_joint_state.q;
     a1_ctrl_states.joint_vel[8] = a1_joint_state.dq;
 }
 
 // RR
-void GazeboA1ROS::RR_hip_state_callback(const unitree_legged_msgs::MotorState &a1_joint_state) {
+void GazeboA1ROS::RR_hip_state_callback(const ros2_unitree_legged_msgs::msg::MotorState &a1_joint_state) {
     a1_ctrl_states.joint_pos[9] = a1_joint_state.q;
     a1_ctrl_states.joint_vel[9] = a1_joint_state.dq;
 }
 
-void GazeboA1ROS::RR_thigh_state_callback(const unitree_legged_msgs::MotorState &a1_joint_state) {
+void GazeboA1ROS::RR_thigh_state_callback(const ros2_unitree_legged_msgs::msg::MotorState &a1_joint_state) {
     a1_ctrl_states.joint_pos[10] = a1_joint_state.q;
     a1_ctrl_states.joint_vel[10] = a1_joint_state.dq;
 }
 
-void GazeboA1ROS::RR_calf_state_callback(const unitree_legged_msgs::MotorState &a1_joint_state) {
+void GazeboA1ROS::RR_calf_state_callback(const ros2_unitree_legged_msgs::msg::MotorState &a1_joint_state) {
     a1_ctrl_states.joint_pos[11] = a1_joint_state.q;
     a1_ctrl_states.joint_vel[11] = a1_joint_state.dq;
 }
 
-// foot contact force
-void GazeboA1ROS::FL_foot_contact_callback(const geometry_msgs::WrenchStamped &force) {
-    a1_ctrl_states.foot_force[0] = force.wrench.force.z;
-}
+// // foot contact force
+// void GazeboA1ROS::FL_foot_contact_callback(const geometry_msgs::WrenchStamped &force) {
+//     a1_ctrl_states.foot_force[0] = force.wrench.force.z;
+// }
 
-void GazeboA1ROS::FR_foot_contact_callback(const geometry_msgs::WrenchStamped &force) {
-    a1_ctrl_states.foot_force[1] = force.wrench.force.z;
-}
+// void GazeboA1ROS::FR_foot_contact_callback(const geometry_msgs::WrenchStamped &force) {
+//     a1_ctrl_states.foot_force[1] = force.wrench.force.z;
+// }
 
-void GazeboA1ROS::RL_foot_contact_callback(const geometry_msgs::WrenchStamped &force) {
-    a1_ctrl_states.foot_force[2] = force.wrench.force.z;
-}
+// void GazeboA1ROS::RL_foot_contact_callback(const geometry_msgs::WrenchStamped &force) {
+//     a1_ctrl_states.foot_force[2] = force.wrench.force.z;
+// }
 
-void GazeboA1ROS::RR_foot_contact_callback(const geometry_msgs::WrenchStamped &force) {
-    a1_ctrl_states.foot_force[3] = force.wrench.force.z;
-}
+// void GazeboA1ROS::RR_foot_contact_callback(const geometry_msgs::WrenchStamped &force) {
+//     a1_ctrl_states.foot_force[3] = force.wrench.force.z;
+// }
 
 void GazeboA1ROS::
-joy_callback(const sensor_msgs::Joy::ConstPtr &joy_msg) {
+joy_callback(const sensor_msgs::msg::Joy::SharedPtr joy_msg) {
     // left updown
     joy_cmd_velz = joy_msg->axes[1] * JOY_CMD_BODY_HEIGHT_VEL;
 

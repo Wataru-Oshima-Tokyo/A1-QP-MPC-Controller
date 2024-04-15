@@ -1,128 +1,106 @@
-//
-// Created by zixin on 11/1/21.
-//
-// stl
 #include <iostream>
 #include <iomanip>
 #include <memory>
 #include <thread>
 #include <chrono>
+#include <atomic>
 
-// ROS
-#include <ros/ros.h>
-#include <ros/console.h>
-#include <sensor_msgs/Imu.h>
-
-// control parameters
+#include "rclcpp/rclcpp.hpp"
+#include "sensor_msgs/msg/imu.hpp"
 #include "A1Params.h"
-// A1 control
 #include "GazeboA1ROS.h"
 
 int main(int argc, char **argv) {
-    ros::init(argc, argv, "gazebo_a1_qp_ctrl");
-    ros::NodeHandle nh;
+    rclcpp::init(argc, argv);
+    auto node = std::make_shared<rclcpp::Node>("gazebo_a1_qp_ctrl");
 
-    // change ros logger
-    if (ros::console::set_logger_level(ROSCONSOLE_DEFAULT_NAME, ros::console::levels::Debug)) {
-        ros::console::notifyLoggerLevelsChanged();
+    // Change ROS logger level
+    auto logger = node->get_logger();
+    rclcpp::Logger rclcpp_logger = node->get_logger();
+    rclcpp::Logger::set_level(rclcpp::Logger::Level::Debug);
+
+    // Ensure ROS uses simulation time
+    bool use_sim_time;
+    node->get_parameter_or("use_sim_time", use_sim_time, false);
+    if (!use_sim_time) {
+        RCLCPP_ERROR(logger, "ROS must set use_sim_time in order to use this program!");
+        return -1;
     }
 
-    // make sure the ROS infra using sim time, otherwise the controller cannot run with correct time steps
-    std::string use_sim_time;
-    if (ros::param::get("/use_sim_time", use_sim_time)) {
-        if (use_sim_time != "true") {
-            std::cout << "ROS must set use_sim_time in order to use this program!" << std::endl;
-            return -1;
-        }
-    }
-
-    // create a1 controller
-    std::unique_ptr<GazeboA1ROS> a1 = std::make_unique<GazeboA1ROS>(nh);
+    // Create A1 controller
+    auto a1 = std::make_unique<GazeboA1ROS>(node);
 
     std::atomic<bool> control_execute{};
-    control_execute.store(true, std::memory_order_release);
+    control_execute.store(true);
 
     // Thread 1: compute desired ground forces
-    std::cout << "Enter thread 1: compute desired ground forces" << std::endl;
+    RCLCPP_INFO(logger, "Enter thread 1: compute desired ground forces");
     std::thread compute_foot_forces_grf_thread([&]() {
-        // prepare variables to monitor time and control the while loop
-        ros::Time start = ros::Time::now();
-        ros::Time prev = ros::Time::now();
-        ros::Time now = ros::Time::now();  // bool res = app.exec();
-        ros::Duration dt(0);
+        rclcpp::Time start = node->now();
+        rclcpp::Time prev = start;
+        rclcpp::Time now;
+        rclcpp::Duration dt(0);
 
-        while (control_execute.load(std::memory_order_acquire) && ros::ok()) {
-//            auto t1 = std::chrono::high_resolution_clock::now();
+        while (control_execute.load() && rclcpp::ok()) {
+            std::this_thread::sleep_for(std::chrono::milliseconds(GRF_UPDATE_FREQUENCY));
 
-            ros::Duration(GRF_UPDATE_FREQUENCY / 1000).sleep();
-
-            // get t and dt
-            now = ros::Time::now();
+            now = node->now();
             dt = now - prev;
             prev = now;
-            ros::Duration elapsed = now - start;
 
             auto t1 = std::chrono::high_resolution_clock::now();
 
-            // compute desired ground forces
-            bool running = a1->update_foot_forces_grf(dt.toSec());
+            // Compute desired ground forces
+            bool running = a1->update_foot_forces_grf(dt.seconds());
 
             auto t2 = std::chrono::high_resolution_clock::now();
             std::chrono::duration<double, std::milli> ms_double = t2 - t1;
-           std::cout << "MPC solution is updated in " << ms_double.count() << "ms" << std::endl;
+            RCLCPP_INFO(logger, "MPC solution is updated in %f ms", ms_double.count());
 
             if (!running) {
-                std::cout << "Thread 1 loop is terminated because of errors." << std::endl;
-                ros::shutdown();
+                RCLCPP_ERROR(logger, "Thread 1 loop is terminated because of errors.");
+                rclcpp::shutdown();
                 std::terminate();
                 break;
             }
         }
     });
 
-    // Thread 2: update robot states, compute desired swing legs forces, compute desired joint torques, and send commands
-    std::cout << "Enter thread 2: update robot states, compute desired swing legs forces, compute desired joint torques, and send commands"
-              << std::endl;
+    // Thread 2: update robot states and send commands
+    RCLCPP_INFO(logger, "Enter thread 2: update robot states and send commands");
     std::thread main_thread([&]() {
-        // prepare variables to monitor time and control the while loop
-        ros::Time start = ros::Time::now();
-        ros::Time prev = ros::Time::now();
-        ros::Time now = ros::Time::now();  // bool res = app.exec();
-        ros::Duration dt(0);
+        rclcpp::Time start = node->now();
+        rclcpp::Time prev = start;
+        rclcpp::Time now;
+        rclcpp::Duration dt(0);
 
-        while (control_execute.load(std::memory_order_acquire) && ros::ok()) {
-            auto t3 = std::chrono::high_resolution_clock::now();
+        while (control_execute.load() && rclcpp::ok()) {
+            std::this_thread::sleep_for(std::chrono::milliseconds(MAIN_UPDATE_FREQUENCY));
 
-            ros::Duration(MAIN_UPDATE_FREQUENCY / 1000).sleep();
-
-            // get t and dt
-            now = ros::Time::now();
+            now = node->now();
             dt = now - prev;
             prev = now;
-            ros::Duration elapsed = now - start;
 
-            // compute desired ground forces
-            bool main_update_running = a1->main_update(elapsed.toSec(), dt.toSec());
+            // Compute desired swing legs forces and joint torques
+            bool main_update_running = a1->main_update(node->now().seconds(), dt.seconds());
             bool send_cmd_running = a1->send_cmd();
 
-            auto t4 = std::chrono::high_resolution_clock::now();
-            std::chrono::duration<double, std::milli> ms_double = t4 - t3;
-            // std::cout << "Thread 2 is updated in " << ms_double.count() << "ms" << std::endl;
-
             if (!main_update_running || !send_cmd_running) {
-                std::cout << "Thread 2 loop is terminated because of errors." << std::endl;
-                ros::shutdown();
+                RCLCPP_ERROR(logger, "Thread 2 loop is terminated because of errors.");
+                rclcpp::shutdown();
                 std::terminate();
                 break;
             }
         }
     });
 
-    ros::AsyncSpinner spinner(12);
-    spinner.start();
+    rclcpp::executors::MultiThreadedExecutor executor;
+    executor.add_node(node);
+    executor.spin();
 
     compute_foot_forces_grf_thread.join();
     main_thread.join();
 
+    rclcpp::shutdown();
     return 0;
 }
